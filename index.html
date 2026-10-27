@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conditional Quiz</title>
+<style>
+:root{--bg:#f4f7ff;--card:#fff;--tx:#1d2540;--mut:#5b6486;--pri:#4c6fff;--ok:#1f9d55;--okbg:#e3f7ec;--no:#c2410c;--nobg:#fff1e6;--bd:#d8def5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12162b;--card:#1c2240;--tx:#eef1ff;--mut:#a3acd1;--pri:#7d95ff;--ok:#4ade80;--okbg:#17382a;--no:#fdba74;--nobg:#3a2615;--bd:#323a66;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12162b;--card:#1c2240;--tx:#eef1ff;--mut:#a3acd1;--pri:#7d95ff;--ok:#4ade80;--okbg:#17382a;--no:#fdba74;--nobg:#3a2615;--bd:#323a66;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Noto Sans Thai","Sarabun",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:20px}
+h1{margin:0 0 8px;font-size:1.6rem}
+.mut{color:var(--mut)}
+.top{display:flex;justify-content:space-between;font-weight:600;margin-bottom:8px}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;width:100%;background:var(--pri);transition:width .1s linear}
+.q{font-size:1.2rem;font-weight:600;margin:0 0 14px}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt.right{background:var(--okbg);border-color:var(--ok)}
+.opt.wrong{background:var(--nobg);border-color:var(--no)}
+.fb{border-radius:12px;padding:12px 14px;margin-top:6px}
+.fb.ok{background:var(--okbg)}.fb.no{background:var(--nobg)}
+.btn{font:inherit;font-weight:600;background:var(--pri);color:#fff;border:0;border-radius:12px;padding:12px 22px;margin-top:14px;cursor:pointer}
+:root:not([data-theme="light"]) .btn{color:#0f1430}
+.big{font-size:3rem;font-weight:700;color:var(--pri);margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card" id="app"></div></div>
+<script>
+const Q=[
+{q:"If it rains tomorrow, we ___ at home.",o:["stayed","will stay","staying","stay"],a:1,e:"พูดถึงอนาคตที่อาจเกิดขึ้นจริง ใช้ If + present, will + V1 จึงตอบ will stay"},
+{q:"If you heat ice, it ___.",o:["melted","will melted","melting","melts"],a:3,e:"ความจริงที่เกิดเสมอ ใช้ If + present, present จึงตอบ melts"},
+{q:"If I study hard, I ___ the test.",o:["passed","pass","will pass","passing"],a:2,e:"ถ้าตั้งใจเรียน อนาคตมีโอกาสสอบผ่าน ใช้ will + V1 จึงตอบ will pass"},
+{q:"Which sentence is a real possibility in the future?",o:["If I won the lottery, I would buy a house.","If I have time, I will call you.","If I were a bird, I would fly.","If I had wings, I would fly."],a:1,e:"If + present, will + V1 ใช้กับเรื่องที่เป็นไปได้จริง ส่วนข้ออื่นเป็นเรื่องฝัน"},
+{q:"If I ___ a bird, I would fly.",o:["were","am","will be","be"],a:0,e:"เรื่องที่ไม่จริง ใช้ If + past, would + V1 และ be ใช้ were จึงตอบ were"},
+{q:"If I had a million baht, I ___ a big house.",o:["will buy","buy","would buy","bought"],a:2,e:"ตอนนี้ยังไม่มีเงินล้าน เป็นเรื่องสมมติ ใช้ would + V1 จึงตอบ would buy"},
+{q:"“If you mix red and blue, you get purple.” This sentence is about...",o:["a fact that is always true","a dream","a story in the past","a promise"],a:0,e:"ผสมสีแดงกับน้ำเงินได้สีม่วงเสมอ เป็นความจริงทั่วไป"},
+{q:"If she is late, the teacher ___ angry.",o:["was","would be","being","will be"],a:3,e:"ส่วน if ใช้ present (is) ส่วนผลลัพธ์ในอนาคตใช้ will be"},
+{q:"If I could fly, I ___ to school.",o:["will fly","would fly","fly","flew"],a:1,e:"บินไม่ได้จริง เป็นเรื่องสมมติ ใช้ would + V1 จึงตอบ would fly"},
+{q:"Which sentence shows imagination (not real)?",o:["If it is sunny, we will play football.","If you drink water, you feel better.","If I were a superhero, I would help everyone.","If he comes, I will tell him."],a:2,e:"If + were, would + V1 ใช้พูดเรื่องที่ไม่จริงหรือจินตนาการ"}
+];
+const L="ABCD",T=20;
+let i=0,score=0,left=T,tm=null,done=false;
+const app=document.getElementById("app");
+function start(){i=0;score=0;app.innerHTML=`<h1>🌟 Conditional Quiz</h1><p class="mut">ตอบให้ทัน 20 วินาทีต่อข้อ ตอบถูกได้ 10 คะแนน ถ้าพลาดไม่เป็นไร เราจะมีเฉลยให้ทุกข้อ ลองเล่นกันเลย!</p><button class="btn" id="go">เริ่มเลย</button>`;document.getElementById("go").onclick=show}
+function show(){
+ done=false;left=T;const d=Q[i];
+ app.innerHTML=`<div class="top"><span>ข้อ ${i+1}/10</span><span>⭐ ${score} คะแนน</span><span id="t">⏱ ${T}</span></div><div class="bar"><i id="b"></i></div><p class="q">${d.q}</p><div id="os">${d.o.map((x,k)=>`<button class="opt" data-k="${k}">${L[k]}. ${x}</button>`).join("")}</div><div id="fb"></div>`;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+ clearInterval(tm);
+ tm=setInterval(()=>{left-=0.1;if(left<=0){left=0;upd();pick(-1)}else upd()},100);
+}
+function upd(){document.getElementById("t").textContent="⏱ "+Math.ceil(left);document.getElementById("b").style.width=(left/T*100)+"%"}
+function pick(k){
+ if(done)return;done=true;clearInterval(tm);
+ const d=Q[i],ok=k===d.a;
+ document.querySelectorAll(".opt").forEach((b,n)=>{b.disabled=true;if(n===d.a)b.classList.add("right");else if(n===k)b.classList.add("wrong")});
+ let h;
+ if(ok){score+=10;h=`<div class="fb ok"><b>เก่งมาก! +10 คะแนน 🎉</b></div>`}
+ else h=`<div class="fb no"><b>${k<0?"หมดเวลาแล้ว ไม่เป็นไรนะ ⏰":"เกือบแล้ว! ลองดูเฉลยด้วยกัน 💪"}</b><br>คำตอบที่ถูกคือ <b>${L[d.a]}. ${d.o[d.a]}</b><br>${d.e}</div>`;
+ h+=`<button class="btn" id="nx">${i<9?"ข้อต่อไป":"ดูผลลัพธ์"}</button>`;
+ document.getElementById("fb").innerHTML=h;
+ document.getElementById("nx").onclick=()=>{i++;i<10?show():end()};
+}
+function end(){
+ const m=score>=80?"ยอดเยี่ยมมาก! 🏆":score>=50?"ทำได้ดีมาก! 👏":"ขอบคุณที่ตั้งใจเล่นนะ ครั้งหน้าต้องดีขึ้นแน่ 🌱";
+ app.innerHTML=`<h1>จบเกมแล้ว!</h1><div class="big">${score}/100</div><p>${m}</p><p class="mut">ทุกข้อที่พลาดคือโอกาสให้เราเรียนรู้เพิ่มขึ้น</p><button class="btn" id="re">เล่นอีกครั้ง</button>`;
+ document.getElementById("re").onclick=start;
+}
+start();
+</script>
+</body>
+</html>
